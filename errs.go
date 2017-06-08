@@ -1,4 +1,4 @@
-// package errs is a convenience wrapper for chaining multiple
+// Package errs is a convenience wrapper for chaining multiple
 // error returning functions.
 //  var e errs.Group
 //
@@ -18,7 +18,7 @@ package errs
 type Group []func() error
 
 // Add adds f to the group of error functions.
-func (g *Group) Add(f func() error){
+func (g *Group) Add(f func() error) {
 	*g = append(*g, f)
 }
 
@@ -33,4 +33,3 @@ func (g Group) Exec() error {
 	}
 	return nil
 }
-
