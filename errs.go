@@ -6,6 +6,8 @@
 //  e.Add(func() error { ... })
 //  e.Add(func() error { ... })
 //  e.Add(func() error { ... })
+//  e.Defer(func() error) // executed after other functons
+//  e.Final(func()) // executes even if error is returned.
 //
 //  // execute them
 //  if err := e.Exec(); err != nil {
@@ -15,18 +17,37 @@ package errs
 
 // Group is a group of functions that returns an error.
 // Empty value of Group is usable.
-type Group []func() error
-
-// Add adds f to the group of error functions.
-func (g *Group) Add(f func() error) {
-	*g = append(*g, f)
+type Group struct {
+	funcs  []func() error
+	defers []func() error
+	final  func()
 }
 
-// Exec runs all functions serially and returns
-// the first error occurred.
+// Add adds f to the group of functions.
+func (g *Group) Add(f func() error) {
+	g.funcs = append(g.funcs, f)
+}
+
+// Defer adds f to the group of defered functions.
+func (g *Group) Defer(f func() error) {
+	g.defers = append([]func() error{f}, g.defers...)
+}
+
+// Final is the function that is guaranteed to be executed
+// even if an error is returned.
+func (g *Group) Final(f func()) {
+	g.final = f
+}
+
+// Exec runs all functions then defer functions, stops on the
+// first that errored and returns the error occurred.
 // If no error is encountered, returns nil.
 func (g Group) Exec() error {
-	for _, f := range g {
+	if g.final != nil {
+		defer g.final()
+	}
+
+	for _, f := range append(g.funcs, g.defers...) {
 		if err := f(); err != nil {
 			return err
 		}
