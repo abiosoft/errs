@@ -6,8 +6,8 @@
 //  e.Add(func() error { ... })
 //  e.Add(func() error { ... })
 //  e.Add(func() error { ... })
-//  e.Defer(func() error) // executed after other functons
-//  e.Final(func()) // executes even if error is returned.
+//  e.Defer(func() error) // executes after other functons
+//  e.Final(func())       // executes even if error is returned.
 //
 //  // execute them
 //  if err := e.Exec(); err != nil {
@@ -29,6 +29,8 @@ func (g *Group) Add(f func() error) {
 }
 
 // Defer adds f to the group of defered functions.
+// Similar to Add, Defer can be called multiple times
+// to add more defer functions.
 func (g *Group) Defer(f func() error) {
 	g.defers = append([]func() error{f}, g.defers...)
 }

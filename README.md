@@ -11,6 +11,8 @@ var e errs.Group
 e.Add(func() error { ... })
 e.Add(func() error { ... })
 e.Add(func() error { ... })
+e.Defer(func() error) // executes after other functons
+e.Final(func())       // executes even if error is returned.
 
 // execute them
 if err := e.Exec(); err != nil {
