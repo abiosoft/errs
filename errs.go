@@ -41,15 +41,18 @@ func (g *Group) Defer(f func()) {
 	g.funcs = append(g.funcs, fn{f: func() error { f(); return nil }, d: true})
 }
 
-// Final is the function that is guaranteed to be executed
+// Final adds a function that is guaranteed to be executed
 // even if an error is returned.
+// Final functions are executed FIFO.
 func (g *Group) Final(f func()) {
 	g.final = append(g.final, f)
 }
 
 // Exec runs all functions then defer functions, stops on the
-// first that errored and returns the error occurred.x
+// first that errored and returns the error occurred.
 // If no error is encountered, returns nil.
+// If an error is returned, defer functions preceding the error
+// returning function are executed.
 func (g Group) Exec() error {
 	defer func() {
 		for _, f := range g.final {
