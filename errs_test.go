@@ -74,7 +74,6 @@ func TestFinal(t *testing.T) {
 	if a != 100 {
 		t.Errorf("Expected 100, found %v", a)
 	}
-
 }
 
 var errFunc = func() error { return errors.New("error") }

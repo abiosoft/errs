@@ -24,13 +24,15 @@ type Group struct {
 }
 
 // Add adds f to the group of functions.
+// Functions are executed FIFO.
 func (g *Group) Add(f func() error) {
 	g.funcs = append(g.funcs, f)
 }
 
-// Defer adds f to the group of defered functions.
+// Defer adds f to the group of deferred functions.
 // Similar to Add, Defer can be called multiple times
 // to add more defer functions.
+// Defer functions are executed LIFO.
 func (g *Group) Defer(f func() error) {
 	g.defers = append([]func() error{f}, g.defers...)
 }
