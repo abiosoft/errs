@@ -45,17 +45,15 @@ func TestNil(t *testing.T) {
 func TestDefer(t *testing.T) {
 	var e Group
 	var l []int
-	e.Defer(func() error {
+	e.Defer(func() {
 		l = append(l, 3)
-		return nil
 	})
 	e.Add(func() error {
 		l = append(l, 1)
 		return nil
 	})
-	e.Defer(func() error {
+	e.Defer(func() {
 		l = append(l, 2)
-		return nil
 	})
 	if err := e.Exec(); err != nil {
 		t.Errorf("Expected nil, found error: %v", err)

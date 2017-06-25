@@ -4,10 +4,10 @@
 //
 //  // add couple of functions
 //  e.Add(func() error { ... })
+//  e.Defer(func() { ... }) // executes after other functions
 //  e.Add(func() error { ... })
 //  e.Add(func() error { ... })
-//  e.Defer(func() error { ... }) // executes after other functons
-//  e.Final(func() { ... })       // executes even if error is returned.
+//  e.Final(func() { ... }) // executes even if error is returned
 //
 //  // execute them
 //  if err := e.Exec(); err != nil {
@@ -15,26 +15,30 @@
 //  }
 package errs
 
-// Group is a group of functions that returns an error.
+type fn struct {
+	f func() error
+	d bool // defer
+}
+
+// Group is a group of functions.
 // Empty value of Group is usable.
 type Group struct {
-	funcs  []func() error
-	defers []func() error
-	final  []func()
+	funcs []fn
+	final []func()
 }
 
 // Add adds f to the group of functions.
 // Functions are executed FIFO.
 func (g *Group) Add(f func() error) {
-	g.funcs = append(g.funcs, f)
+	g.funcs = append(g.funcs, fn{f: f})
 }
 
 // Defer adds f to the group of deferred functions.
 // Similar to Add, Defer can be called multiple times
 // to add more defer functions.
 // Defer functions are executed LIFO.
-func (g *Group) Defer(f func() error) {
-	g.defers = append([]func() error{f}, g.defers...)
+func (g *Group) Defer(f func()) {
+	g.funcs = append(g.funcs, fn{f: func() error { f(); return nil }, d: true})
 }
 
 // Final is the function that is guaranteed to be executed
@@ -44,7 +48,7 @@ func (g *Group) Final(f func()) {
 }
 
 // Exec runs all functions then defer functions, stops on the
-// first that errored and returns the error occurred.
+// first that errored and returns the error occurred.x
 // If no error is encountered, returns nil.
 func (g Group) Exec() error {
 	defer func() {
@@ -53,10 +57,21 @@ func (g Group) Exec() error {
 		}
 	}()
 
-	for _, f := range append(g.funcs, g.defers...) {
-		if err := f(); err != nil {
-			return err
+	var defers []func() error
+	var err error
+	for _, fn := range g.funcs {
+		if fn.d {
+			defers = append([]func() error{fn.f}, defers...)
+			continue
+		}
+		if err = fn.f(); err != nil {
+			break
 		}
 	}
-	return nil
+
+	for _, fn := range defers {
+		fn()
+	}
+
+	return err
 }
