@@ -6,6 +6,9 @@ import (
 	"testing"
 )
 
+var errFunc = func() error { return errors.New("error") }
+var okFunc = func() error { return nil }
+
 func TestNonNil(t *testing.T) {
 	var e Group
 	e.Add(errFunc)
@@ -66,15 +69,16 @@ func TestDefer(t *testing.T) {
 func TestFinal(t *testing.T) {
 	var e Group
 	e.Add(errFunc)
-	var a int
+	var a, b int
 	e.Final(func() { a = 100 })
+	e.Final(func() { b = 101 })
 	if e.Exec() == nil {
 		t.Error("expected error, found nil")
 	}
 	if a != 100 {
 		t.Errorf("Expected 100, found %v", a)
 	}
+	if b != 101 {
+		t.Errorf("Expected 101, found %v", b)
+	}
 }
-
-var errFunc = func() error { return errors.New("error") }
-var okFunc = func() error { return nil }
