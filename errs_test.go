@@ -3,6 +3,7 @@ package errs
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -78,5 +79,49 @@ func TestFinal(t *testing.T) {
 	}
 	if b != 101 {
 		t.Errorf("Expected 101, found %v", b)
+	}
+}
+
+func TestFiller_Fill(t *testing.T) {
+	var f = sliceFiller{
+		0, "str", []int{2, 1},
+	}
+	var a int
+	var b string
+	var c []int
+	f.Fill(&a, &b, &c)
+	assert(t, a, f[0])
+	assert(t, b, f[1])
+	assert(t, c, f[2])
+}
+
+func TestGroup_AddF(t *testing.T) {
+	var e Group
+	var a, a1 int
+	var b, b1 string
+	a1 = 2
+	b1 = "some string"
+	var f = func(a int, b string) (int, string, error) {
+		return a, b, nil
+	}
+	e.AddF(f, a1, b1).Fill(&a, &b)
+
+	err := errors.New("err")
+	var f1a int
+	var f1a1 = 1
+	var f1 = func() (int, error) { return f1a1, err }
+	e.AddF(f1).Fill(&f1a)
+
+	err1 := e.Exec()
+	assert(t, err1, err)
+	assert(t, a, a1)
+	assert(t, b, b1)
+	assert(t, f1a, f1a1)
+}
+
+func assert(t *testing.T, a, b interface{}) {
+	if !reflect.DeepEqual(a, b) {
+		t.Errorf("%v != %v", a, b)
+		t.Fail()
 	}
 }
