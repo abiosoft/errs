@@ -1,5 +1,5 @@
 # errs
-convenience wrapper for chaining multiple error returning functions.
+convenience wrapper for chaining multiple error returning functions _when you do not need to handle the errors separately_.
 
 [![Documentation](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/abiosoft/errs)
 
